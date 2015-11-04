@@ -1,5 +1,4 @@
 package com.inin.analytics.elasticsearch;
-
 import static org.elasticsearch.common.settings.ImmutableSettings.settingsBuilder;
 
 import java.io.File;
@@ -39,31 +38,31 @@ public abstract class BaseESReducer implements Reducer<Text, Text, NullWritable,
 	public static final String SNAPSHOT_NAME = "snapshot";
 	
 	// The local filesystem location that ES will write the snapshot out to
-	private String snapshotWorkingLocation;
+	protected String snapshotWorkingLocation;
 	
 	// Where the snapshot will be moved to. Typical use case would be to throw it onto S3
-	private String snapshotFinalDestination;
+	protected String snapshotFinalDestination;
 	
 	// The name of a snapshot repo. We'll enumerate that on each job run so that the repo names are unique across rebuilds
-	private String snapshotRepoName;
+	protected String snapshotRepoName;
 	
 	// Local filesystem location where index data is built
-	private String esWorkingDir;
+	protected String esWorkingDir;
 	
 	// The partition of data this reducer is serving. Useful for making directories unique if running multiple reducers on a task tracker 
-	private String partition;
+	protected String partition;
 	
 	// How many shards are in an index
-	private Integer numShardsPerIndex;
+	protected Integer numShardsPerIndex;
 	
 	// The container handles spinning up our embedded elasticsearch instance
-	private ESEmbededContainer esEmbededContainer;
+	protected ESEmbededContainer esEmbededContainer;
 		
 	// Hold onto some frequently generated objects to cut down on GC overhead 
-	private String indexType;
-	private String docId;
-	private String pre;
-	private String json;
+	protected String indexType;
+	protected String docId;
+	protected String pre;
+	protected String json;
    
 	@Override
 	public void configure(JobConf job) {
@@ -79,7 +78,7 @@ public abstract class BaseESReducer implements Reducer<Text, Text, NullWritable,
 	}
 	
 
-	private void init(String index) {
+	protected void init(String index) {
 		String templateName = getTemplateName();
 		String templateJson = getTemplate();
 
