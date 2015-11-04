@@ -30,7 +30,33 @@
 		<slf4j.version>1.7.5</slf4j.version>
 		<org.apache.avro.version>1.7.5</org.apache.avro.version>
 	</properties>
-	
+	    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>single</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                            <archive>
+                                <index>true</index>
+                                <manifest>
+                                    <mainClass>bdmd.hadoop.Driver</mainClass>
+                                </manifest>
+                            </archive>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 	<licenses>
   		<license>
     		<name>The Apache License, Version 2.0</name>
