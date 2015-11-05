@@ -42,7 +42,7 @@ public class OfflineIndexBuilder implements Tool {
 	@Option(name = "--num-shards", usage = "numShardsPerIndex")
 	int numShardsPerIndex = 1;
 	@Option(name = "--manifest", usage = "manifestLocation", required = true)
-	int manifestLocation;
+	String manifestLocation;
 	@Override
 	public void setConf(Configuration conf) {
 		this.conf = conf;
