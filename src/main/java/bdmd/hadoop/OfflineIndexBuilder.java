@@ -11,6 +11,7 @@ import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.KeyValueTextInputFormat;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.TextInputFormat;
 import org.apache.hadoop.mapred.TextOutputFormat;
@@ -95,7 +96,7 @@ public class OfflineIndexBuilder implements Tool {
 
 		JobConf job = new JobConf(conf, ExampleIndexingJob.class);
 		job.setJobName("Elastic Search Offline Index Generator");
-		job.setInputFormat(TextInputFormat.class);
+		job.setInputFormat(KeyValueTextInputFormat.class);
 		job.setOutputFormat(TextOutputFormat.class);
 		job.setMapperClass(OfflineESMapper.class);
 		job.setReducerClass(OfflineESReducer.class);
