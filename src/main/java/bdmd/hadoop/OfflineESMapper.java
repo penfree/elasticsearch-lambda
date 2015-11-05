@@ -39,6 +39,6 @@ public class OfflineESMapper extends BaseESMapper {
 		String routingKey = obj.getString("_yida_es_routing_key");
 		String routingHash = elasticsearchRoutingStrategy.getRoutingHash(routingKey, "es");
 		Text outputKey = new Text(indexName + BaseESReducer.TUPLE_SEPARATOR + routingHash);
-		output.collect(outputKey, value);
+		output.collect(outputKey, key);
 	} 
 }
