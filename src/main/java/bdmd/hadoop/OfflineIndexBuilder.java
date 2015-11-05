@@ -121,6 +121,7 @@ public class OfflineIndexBuilder implements Tool {
 		conf.set(ConfigParams.NUM_SHARDS_PER_INDEX.toString(), Integer.toString(numShardsPerIndex));
 		conf.set("es.index.name", esIndexName);
 		conf.set("es.template", readFile(template));
+		System.err.println(conf.get("es.template"));
 		//DistributedCache.addCacheFile(new Path(template), conf);
 		JobConf job = new JobConf(conf, ExampleIndexingJob.class);
 		
