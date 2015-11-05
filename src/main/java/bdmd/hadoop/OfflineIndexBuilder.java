@@ -2,8 +2,10 @@ package bdmd.hadoop;
 import static org.kohsuke.args4j.ExampleMode.ALL;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -63,22 +65,39 @@ public class OfflineIndexBuilder implements Tool {
 		return conf;
 	}
 
-	public String readFile(String path)
-	{
-		String result = "";
-        BufferedReader br;
-		try {
-			br = new BufferedReader(new FileReader(path));
-	        char[] cbuf = new char[1024000];
-	        br.read(cbuf);
-	        result = cbuf.toString();
-	        br.close();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return result;
-	}
+    /**
+     * 以行为单位读取文件，常用于读面向行的格式化文件
+     */
+    public String readFile(String fileName) {
+        File file = new File(fileName);
+        BufferedReader reader = null;
+        String result = "";
+        try {
+            System.out.println("以行为单位读取文件内容，一次读一整行：");
+            reader = new BufferedReader(new FileReader(file));
+            String tempString = null;
+            int line = 1;
+            // 一次读入一行，直到读入null为文件结束
+            while ((tempString = reader.readLine()) != null) {
+                // 显示行号
+            	result = result + tempString;
+                //System.out.println("line " + line + ": " + tempString);
+                line++;
+            }
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e1) {
+                }
+            }
+        }
+        return result;
+    }
 	
 	@Override
 	public int run(String[] args) throws Exception {
