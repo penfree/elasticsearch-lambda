@@ -94,7 +94,7 @@ public class OfflineIndexBuilder implements Tool {
 		conf.set(ConfigParams.SNAPSHOT_FINAL_DESTINATION.toString(), snapshotFinalDestination);
 		conf.set(ConfigParams.SNAPSHOT_REPO_NAME_CONFIG_KEY.toString(), snapshotRepoName);
 		conf.set(ConfigParams.ES_WORKING_DIR.toString(), esWorkingDir);
-		conf.set("es.shards.num", Integer.toString(numShardsPerIndex));
+		conf.set(ConfigParams.NUM_SHARDS_PER_INDEX.toString(), Integer.toString(numShardsPerIndex));
 		conf.set("es.index.name", esIndexName);
 
 		JobConf job = new JobConf(conf, ExampleIndexingJob.class);

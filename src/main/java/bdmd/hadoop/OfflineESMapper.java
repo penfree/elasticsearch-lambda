@@ -10,6 +10,7 @@ import org.apache.hadoop.mapreduce.Mapper.Context;
 
 import com.inin.analytics.elasticsearch.BaseESMapper;
 import com.inin.analytics.elasticsearch.BaseESReducer;
+import com.inin.analytics.elasticsearch.ConfigParams;
 import com.inin.analytics.elasticsearch.index.rotation.ElasticSearchIndexMetadata;
 import com.inin.analytics.elasticsearch.index.routing.ElasticsearchRoutingStrategy;
 import com.inin.analytics.elasticsearch.index.routing.ElasticsearchRoutingStrategyV1;
@@ -23,7 +24,7 @@ public class OfflineESMapper extends BaseESMapper {
 	@Override
 	public void configure(JobConf job) {
 		indexName = job.get("es.index.name");
-		int numShards = job.getInt("es.shards.num", 1);
+		int numShards = job.getInt(ConfigParams.NUM_SHARDS_PER_INDEX.toString(), 1);
 		ElasticSearchIndexMetadata indexMetadata = new ElasticSearchIndexMetadata();
 		indexMetadata.setNumShards(numShards);
 		indexMetadata.setNumShardsPerOrg(1);
