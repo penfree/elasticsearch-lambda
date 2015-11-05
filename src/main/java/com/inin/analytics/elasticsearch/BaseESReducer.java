@@ -1,5 +1,5 @@
 package com.inin.analytics.elasticsearch;
-import static org.elasticsearch.common.settings.ImmutableSettings.settingsBuilder;
+import static org.elasticsearch.common.settings.Settings.settingsBuilder;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,8 +15,6 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 import org.elasticsearch.action.ActionFuture;
-import org.elasticsearch.action.admin.cluster.node.info.NodesInfoRequest;
-import org.elasticsearch.action.admin.cluster.node.info.NodesInfoResponse;
 import org.elasticsearch.action.admin.cluster.node.stats.NodesStatsRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
@@ -49,6 +47,8 @@ public abstract class BaseESReducer implements Reducer<Text, Text, NullWritable,
 	// Local filesystem location where index data is built
 	protected String esWorkingDir;
 	
+	protected String esHomeDir;
+	
 	// The partition of data this reducer is serving. Useful for making directories unique if running multiple reducers on a task tracker 
 	protected String partition;
 	
@@ -74,6 +74,7 @@ public abstract class BaseESReducer implements Reducer<Text, Text, NullWritable,
 		snapshotFinalDestination = job.get(ConfigParams.SNAPSHOT_FINAL_DESTINATION.toString());
 		snapshotRepoName = job.get(ConfigParams.SNAPSHOT_REPO_NAME_CONFIG_KEY.toString());
 		esWorkingDir = job.get(ConfigParams.ES_WORKING_DIR.toString()) + partition + attemptId + DIR_SEPARATOR;
+		esHomeDir = job.get(ConfigParams.ES_HOME_DIR.toString()) + partition + attemptId + DIR_SEPARATOR;
 		numShardsPerIndex = new Integer(job.get(ConfigParams.NUM_SHARDS_PER_INDEX.toString()));
 	}
 	
@@ -85,6 +86,7 @@ public abstract class BaseESReducer implements Reducer<Text, Text, NullWritable,
 		ESEmbededContainer.Builder builder = new ESEmbededContainer.Builder()
 		.withNodeName("embededESTempLoaderNode" + partition)
 		.withWorkingDir(esWorkingDir)
+		.withHomeDir(esHomeDir)
 		.withClusterName("bulkLoadPartition:" + partition)
 		.withNumShardsPerIndex(numShardsPerIndex)
 		.withSnapshotWorkingLocation(snapshotWorkingLocation)

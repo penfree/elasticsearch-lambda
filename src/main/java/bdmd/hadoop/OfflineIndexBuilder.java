@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.URI;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -55,6 +56,8 @@ public class OfflineIndexBuilder implements Tool {
 	String esIndexName;
 	@Option(name = "--template", usage = "template file path", required = true)
 	String template;
+	@Option(name = "--home-dir", usage = "es home dir", required = true)
+    String esHomeDir;
 	@Override
 	public void setConf(Configuration conf) {
 		this.conf = conf;
@@ -137,11 +140,13 @@ public class OfflineIndexBuilder implements Tool {
 		conf.set(ConfigParams.SNAPSHOT_FINAL_DESTINATION.toString(), snapshotFinalDestination);
 		conf.set(ConfigParams.SNAPSHOT_REPO_NAME_CONFIG_KEY.toString(), snapshotRepoName);
 		conf.set(ConfigParams.ES_WORKING_DIR.toString(), esWorkingDir);
+		conf.set(ConfigParams.ES_HOME_DIR.toString(), esHomeDir);
 		conf.set(ConfigParams.NUM_SHARDS_PER_INDEX.toString(), Integer.toString(numShardsPerIndex));
 		conf.set("es.index.name", esIndexName);
 		conf.set("es.template", readFile(template));
-		System.err.println(conf.get("es.template"));
-		//DistributedCache.addCacheFile(new Path(template), conf);
+		//System.err.println(conf.get("es.template"));
+		DistributedCache.addCacheArchive(new URI("/tmp/ik-config.tgz"), conf);
+		DistributedCache.addCacheArchive(new URI("/tmp/elasticsearch-analysis-ik.tgz"), conf);
 		JobConf job = new JobConf(conf, ExampleIndexingJob.class);
 		
 		job.setJobName("Elastic Search Offline Index Generator");

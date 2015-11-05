@@ -2,6 +2,12 @@ package com.inin.analytics.elasticsearch;
 
 import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,7 +15,7 @@ import java.util.Map;
 import org.apache.hadoop.mapred.Reporter;
 import org.elasticsearch.action.admin.indices.stats.IndicesStatsResponse;
 import org.elasticsearch.cluster.metadata.IndexMetaData;
-import org.elasticsearch.common.settings.ImmutableSettings;
+//import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
@@ -93,20 +99,101 @@ public class ESEmbededContainer {
 		private String snapshotWorkingLocation;
 		private String snapshotRepoName;
 		private boolean memoryBackedIndex = false;
+		private String homeDir;
+		
+		public static void copyFile(File sourcefile,File targetFile) throws IOException{
+
+			//新建文件输入流并对它进行缓冲
+			FileInputStream input=new FileInputStream(sourcefile);
+			BufferedInputStream inbuff=new BufferedInputStream(input);
+
+			//新建文件输出流并对它进行缓冲
+			FileOutputStream out=new FileOutputStream(targetFile);
+			BufferedOutputStream outbuff=new BufferedOutputStream(out);
+
+			//缓冲数组
+			byte[] b=new byte[1024*5];
+			int len=0;
+			while((len=inbuff.read(b))!=-1){
+				outbuff.write(b, 0, len);
+			}
+
+			//刷新此缓冲的输出流
+			outbuff.flush();
+
+			//关闭流
+			inbuff.close();
+			outbuff.close();
+			out.close();
+			input.close();
+			logger.warn("copy " + sourcefile + " to " + targetFile);
+		}
+
+		public static void copyDirectory(String sourceDir,String targetDir) throws IOException{
+
+			//新建目标目录
+
+			(new File(targetDir)).mkdirs();
+
+			//获取源文件夹当下的文件或目录
+			File[] file=(new File(sourceDir)).listFiles();
+
+			for (int i = 0; i < file.length; i++) {
+				if(file[i].isFile()){
+					//源文件
+					File sourceFile=file[i];
+					//目标文件
+					File targetFile=new File(new File(targetDir).getAbsolutePath()+File.separator+file[i].getName());      
+					copyFile(sourceFile, targetFile);        
+				}
+				if(file[i].isDirectory()){
+					//准备复制的源文件夹
+					String dir1=sourceDir+file[i].getName();
+					//准备复制的目标文件夹
+					String dir2=targetDir+"/"+file[i].getName();
+					copyDirectory(dir1, dir2);
+				}
+			}
+
+		}
+		
+		public int copyExternalFiles()
+		{
+			String configDir = homeDir + File.separator + "config";
+			String pluginDir = homeDir + File.separator + "plugin";
+			String ikConfig = "ik-config.tgz";
+			String plugin = "elasticsearch-analysis-ik.tgz";
+			try {
+				if (new File(ikConfig).exists())
+				{
+					copyDirectory(ikConfig, configDir);
+				}
+				if (new File(plugin).exists())
+				{
+					copyDirectory(plugin, pluginDir);
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return 0;
+		}
 
 		public ESEmbededContainer build() {
 			Preconditions.checkNotNull(nodeName);
 			Preconditions.checkNotNull(numShardsPerIndex);
 			Preconditions.checkNotNull(workingDir);
 			Preconditions.checkNotNull(clusterName);
+			this.copyExternalFiles();
 
-			org.elasticsearch.common.settings.ImmutableSettings.Builder builder = ImmutableSettings.builder()
+			org.elasticsearch.common.settings.Settings.Builder builder = org.elasticsearch.common.settings.Settings.builder()
 			.put("http.enabled", false) // Disable HTTP transport, we'll communicate inner-jvm
 			.put("processors", 1) // We could experiment ramping this up to match # cores - num reducers per node
 			.put(IndexMetaData.SETTING_NUMBER_OF_SHARDS, numShardsPerIndex) 
 			.put("node.name", nodeName)
 			.put("path.data", workingDir)
-			.put("plugins." + PluginsService.LOAD_PLUGIN_FROM_CLASSPATH, true) // Allow plugins if they're bundled in with the uuberjar
+			.put("path.home", homeDir)
+			//.put("plugins." + PluginsService.LOAD_PLUGIN_FROM_CLASSPATH, true) // Allow plugins if they're bundled in with the uuberjar
 			.put("index.refresh_interval", -1) 
 			.put("index.translog.flush_threshold_size", "128mb") // Aggressive flushing helps keep the memory footprint below the yarn container max. TODO: Make configurable 
 			.put("bootstrap.mlockall", true)
@@ -120,6 +207,9 @@ public class ESEmbededContainer {
 			.put("index.merge.policy.segments_per_tier", 4)
 			.put("index.merge.scheduler.max_thread_count", 1)
 			.put("path.repo", snapshotWorkingLocation)
+			.put("index.analysis.analyzer.ik_max.type", "ik")
+			.put("index.analysis.analyzer.ik_smart.type", "ik")
+			.put("index.analysis.analyzer.ik_smart.use_smart", true)
 			.put("index.compound_format", false) // Explicitly disable compound files
 			//.put("index.codec", "best_compression") // Lucene 5/ES 2.0 feature to play with when that's out
 			.put("indices.fielddata.cache.size", "0%");
@@ -173,6 +263,11 @@ public class ESEmbededContainer {
 
 		public Builder withWorkingDir(String workingDir) {
 			this.workingDir = workingDir;
+			return this;
+		}
+		
+		public Builder withHomeDir(String homeDir) {
+			this.homeDir = homeDir;
 			return this;
 		}
 		public Builder withClusterName(String clusterName) {
