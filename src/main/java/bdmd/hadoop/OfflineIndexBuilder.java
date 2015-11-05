@@ -44,6 +44,8 @@ public class OfflineIndexBuilder implements Tool {
 	int numShardsPerIndex = 1;
 	@Option(name = "--manifest", usage = "manifestLocation", required = true)
 	String manifestLocation;
+	@Option(name = "--index", usage = "manifestLocation", required = true)
+	String esIndexName;
 	@Override
 	public void setConf(Configuration conf) {
 		this.conf = conf;
@@ -92,7 +94,8 @@ public class OfflineIndexBuilder implements Tool {
 		conf.set(ConfigParams.SNAPSHOT_FINAL_DESTINATION.toString(), snapshotFinalDestination);
 		conf.set(ConfigParams.SNAPSHOT_REPO_NAME_CONFIG_KEY.toString(), snapshotRepoName);
 		conf.set(ConfigParams.ES_WORKING_DIR.toString(), esWorkingDir);
-		conf.set(ConfigParams.NUM_SHARDS_PER_INDEX.toString(), Integer.toString(numShardsPerIndex));
+		conf.set("es.shards.num", Integer.toString(numShardsPerIndex));
+		conf.set("es.index.name", esIndexName);
 
 		JobConf job = new JobConf(conf, ExampleIndexingJob.class);
 		job.setJobName("Elastic Search Offline Index Generator");
