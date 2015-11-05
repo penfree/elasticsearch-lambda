@@ -1,10 +1,15 @@
 package bdmd.hadoop;
 import static org.kohsuke.args4j.ExampleMode.ALL;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.filecache.DistributedCache;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileInputFormat;
@@ -44,8 +49,10 @@ public class OfflineIndexBuilder implements Tool {
 	int numShardsPerIndex = 1;
 	@Option(name = "--manifest", usage = "manifestLocation", required = true)
 	String manifestLocation;
-	@Option(name = "--index", usage = "manifestLocation", required = true)
+	@Option(name = "--index", usage = "index name", required = true)
 	String esIndexName;
+	@Option(name = "--template", usage = "template file path", required = true)
+	String template;
 	@Override
 	public void setConf(Configuration conf) {
 		this.conf = conf;
@@ -56,6 +63,23 @@ public class OfflineIndexBuilder implements Tool {
 		return conf;
 	}
 
+	public String readFile(String path)
+	{
+		String result = "";
+        BufferedReader br;
+		try {
+			br = new BufferedReader(new FileReader(path));
+	        char[] cbuf = new char[1024000];
+	        br.read(cbuf);
+	        result = cbuf.toString();
+	        br.close();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return result;
+	}
+	
 	@Override
 	public int run(String[] args) throws Exception {
 		// TODO Auto-generated method stub
@@ -96,8 +120,10 @@ public class OfflineIndexBuilder implements Tool {
 		conf.set(ConfigParams.ES_WORKING_DIR.toString(), esWorkingDir);
 		conf.set(ConfigParams.NUM_SHARDS_PER_INDEX.toString(), Integer.toString(numShardsPerIndex));
 		conf.set("es.index.name", esIndexName);
-
+		conf.set("es.template", readFile(template));
+		//DistributedCache.addCacheFile(new Path(template), conf);
 		JobConf job = new JobConf(conf, ExampleIndexingJob.class);
+		
 		job.setJobName("Elastic Search Offline Index Generator");
 		job.setInputFormat(KeyValueTextInputFormat.class);
 		job.setOutputFormat(TextOutputFormat.class);
@@ -107,10 +133,13 @@ public class OfflineIndexBuilder implements Tool {
 		job.setMapOutputKeyClass(Text.class);
 		job.setNumReduceTasks(numReducers);
 		job.setSpeculativeExecution(false);
-
+		FileSystem fs = FileSystem.get(conf);
 		Path jobOutput = new Path(manifestLocation + "/raw/");
 		Path manifestFile = new Path(manifestLocation + "manifest");
-
+		if (fs.exists(jobOutput))
+		{
+			fs.delete(jobOutput, true);
+		}
 		FileOutputFormat.setOutputPath(job, jobOutput);
 
 		// Set up inputs

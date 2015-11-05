@@ -6,8 +6,10 @@ import java.util.Iterator;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapreduce.filecache.DistributedCache;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
 
@@ -15,19 +17,28 @@ import com.inin.analytics.elasticsearch.BaseESReducer;
 import com.inin.analytics.elasticsearch.BaseESReducer.JOB_COUNTER;
 
 public class OfflineESReducer extends BaseESReducer {
+	protected String template = "";
 
 	@Override
 	public String getTemplate() {
 		// TODO Auto-generated method stub
-		return null;
+		return template;
 	}
 
 	@Override
 	public String getTemplateName() {
 		// TODO Auto-generated method stub
-		return null;
+		return "template";
 	}
 	
+	
+	@Override
+	public void configure(JobConf job) {
+		// TODO Auto-generated method stub
+		super.configure(job);
+		template = job.get("es.template");
+	}
+
 	@Override
 	public void reduce(Text docMetaData, Iterator<Text> documentPayloads, OutputCollector<NullWritable, Text> output, final Reporter reporter) throws IOException {
 		String[] pieces = StringUtils.split(docMetaData.toString(), TUPLE_SEPARATOR);
