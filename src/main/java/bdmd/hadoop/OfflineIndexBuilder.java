@@ -144,6 +144,7 @@ public class OfflineIndexBuilder implements Tool {
 		conf.set(ConfigParams.NUM_SHARDS_PER_INDEX.toString(), Integer.toString(numShardsPerIndex));
 		conf.set("es.index.name", esIndexName);
 		conf.set("es.template", readFile(template));
+		conf.set("mapreduce.job.user.classpath.first", "true");
 		//System.err.println(conf.get("es.template"));
 		DistributedCache.addCacheArchive(new URI("/tmp/ik-config.tgz"), conf);
 		DistributedCache.addCacheArchive(new URI("/tmp/elasticsearch-analysis-ik.tgz"), conf);
